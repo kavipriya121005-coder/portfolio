@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>IoT Assignment 05 | Kavipriya C A</title>
-<meta name="description" content="Assignment 05 Adafruit IO bulb-control dashboard link." />
+<title>Firebase-Based Home Automation | Kavipriya C A</title>
+<meta name="description" content="Assignment 05 extends Firebase sensor monitoring with ESP32 relay control, manual and automatic modes, and LDR threshold switching." />
 <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -13,19 +13,261 @@
 
   <main id="main-content">
     <header class="iot-hero">
-      <span class="eyebrow">IoT works / Task 05</span>
-      <h1>Assignment <span>05</span></h1>
-      <p>Adafruit IO bulb-control dashboard.</p>
+      <span class="eyebrow">Firebase / ESP32 / relay / home automation</span>
+      <h1>Firebase-Based <span>Home Automation</span></h1>
+      <p>Extend the Task 4 Firebase monitoring platform with remote manual control and LDR-based automatic switching of an appliance.</p>
+      <div class="iot-meta" aria-label="Project technologies">
+        <span class="tag">Firebase</span><span class="tag">ESP32</span><span class="tag">Relay</span><span class="tag">DHT11</span><span class="tag">LDR</span>
+      </div>
+      <nav class="iot-assignment-list" aria-label="On this page" style="margin-top:2rem;">
+        <div class="iot-assignment">
+          <span class="iot-assignment-number">05</span>
+          <div><h3>On this page</h3><p>Jump to a section</p></div>
+          <span class="iot-assignment-link">Overview</span>
+        </div>
+        <div class="iot-meta">
+          <a class="tag" href="#overview">01 Overview</a>
+          <a class="tag" href="#relay">02 Relay integration</a>
+          <a class="tag" href="#firebase">03 Firebase structure</a>
+          <a class="tag" href="#manual">04 Manual control</a>
+          <a class="tag" href="#automatic">05 Automatic mode</a>
+          <a class="tag" href="#status">06 Status &amp; history</a>
+          <a class="tag" href="#dashboard">07 Dashboard</a>
+          <a class="tag" href="#history">08 Extended history</a>
+          <a class="tag" href="#evidence">09 Evidence &amp; video</a>
+          <a class="tag" href="#testing">10 Testing</a>
+          <a class="tag" href="#safety">11 Safety</a>
+          <a class="tag" href="#reflection">12 Final outcome</a>
+        </div>
+      </nav>
     </header>
 
-    <section class="iot-section" aria-labelledby="dashboard-title">
-      <div class="iot-section-heading"><span>PROJECT LINK</span><h2 id="dashboard-title">IO - bulb control</h2></div>
-      <p class="iot-intro">Open the Adafruit IO dashboard using the link provided for this assignment.</p>
-      <p style="margin-top:1rem;"><a class="btn btn-outline" href="https://io.adafruit.com/kavilakshana/dashboards/bulb-control" target="_blank" rel="noopener noreferrer">IO - bulb control &rarr;</a></p>
+    <section class="iot-section" id="overview">
+      <div class="iot-section-heading"><span>01 / PROJECT OVERVIEW</span><h2>Task 5 extends Task 4</h2></div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>STARTING POINT</span><h3>Firebase environment monitoring</h3><p>This assignment builds on the Task 4 platform. Existing ESP32 sensor readings, Firebase project, authentication, database, and dashboard remain the foundation.</p></div>
+        <div class="iot-concept"><span>NEW CAPABILITY</span><h3>Manual and automatic appliance control</h3><p>Add an ESP32-controlled relay and dashboard settings so a bulb can be operated remotely in MANUAL mode or switched automatically from the LDR reading in AUTO mode.</p></div>
+      </div>
+      <p class="iot-summary"><strong>Project summary:</strong> Firebase stores the requested mode and bulb state. The ESP32 reads those values, applies manual or threshold-based logic, switches the relay, then writes the actual bulb state, operating mode, and LDR threshold back to Firebase.</p>
+      <div class="iot-flow" aria-label="Dashboard and LDR through Firebase and ESP32 to relay and bulb">
+        <div class="iot-flow-step"><span>CONTROL</span><strong>Dashboard</strong><p>Mode / bulb request</p></div>
+        <div class="iot-flow-step"><span>CLOUD</span><strong>Firebase</strong><p>Control + readings</p></div>
+        <div class="iot-flow-step"><span>LOGIC</span><strong>ESP32</strong><p>MANUAL / AUTO</p></div>
+        <div class="iot-flow-step"><span>OUTPUT</span><strong>Relay → bulb</strong><p>GPIO 26 switches load</p></div>
+      </div>
+      <p class="iot-note">DHT11 and LDR monitoring from Task 4 continues. This task adds appliance actuation and records the resulting automation state alongside sensor history.</p>
+    </section>
+
+    <section class="iot-section" id="relay">
+      <div class="iot-section-heading"><span>02 / ACTUATOR INTEGRATION</span><h2>Add relay-based appliance control</h2></div>
+      <p class="iot-intro">Connect a single-channel relay module to the ESP32 as the low-voltage control interface for the appliance. In the provided plan, GPIO 26 drives the relay input.</p>
+      <div class="iot-flow" aria-label="ESP32 GPIO 26 to relay input to relay contacts to bulb">
+        <div class="iot-flow-step"><span>CONTROL</span><strong>ESP32 GPIO 26</strong></div>
+        <div class="iot-flow-step"><span>INPUT</span><strong>Relay IN</strong></div>
+        <div class="iot-flow-step"><span>CONTACTS</span><strong>Relay contacts</strong></div>
+        <div class="iot-flow-step"><span>SWITCHED LOAD</span><strong>230 V bulb</strong></div>
+      </div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>CONTROL SIDE</span><h3>ESP32 signal</h3><p>The ESP32 output changes the relay-module input according to the selected mode and calculated bulb state.</p></div>
+        <div class="iot-concept"><span>LOAD SIDE</span><h3>Relay contacts</h3><p>Properly rated relay contacts switch the appliance circuit; the relay rating must suit the actual load.</p></div>
+      </div>
+      <aside class="iot-summary" role="alert" style="border-left-color:#f87171;background:rgba(248,113,113,0.08);padding:1rem;">
+        <strong>Mains safety:</strong> 230 V mains wiring can cause fatal electric shock or fire. Disconnect power before wiring. Use a correctly rated relay in an insulated enclosure, keep mains wiring isolated from low-voltage electronics, and have the mains side wired or inspected by a qualified person.
+      </aside>
+    </section>
+
+    <section class="iot-section" id="firebase">
+      <div class="iot-section-heading"><span>03 / FIREBASE EXTENSION</span><h2>Extend the Task 4 database</h2></div>
+      <p class="iot-intro">Keep the existing <code>/current</code> sensor data and <code>/history</code> records. Add a <code>/control</code> node for dashboard requests, and extend current status and history with the actuator state, selected mode, and active LDR threshold.</p>
+      <pre class="iot-code"><code>/
+|-- control
+|   |-- mode: "MANUAL" | "AUTO"
+|   `-- bulb: true | false
+|-- current
+|   |-- temperature: 28.4
+|   |-- humidity: 52
+|   |-- ldr: 3250
+|   |-- bulbState: true
+|   |-- mode: "AUTO"
+|   `-- ldrThreshold: 3000
+`-- history
+    `-- record_001
+        |-- timestamp: 1758956400
+        |-- temperature: 28.4
+        |-- humidity: 52
+        |-- ldr: 3250
+        |-- bulbState: true
+        |-- mode: "AUTO"
+        `-- ldrThreshold: 3000</code></pre>
+      <div class="iot-table-wrap">
+        <table class="iot-table">
+          <thead><tr><th scope="col">Firebase path</th><th scope="col">Stored value</th><th scope="col">Used by</th></tr></thead>
+          <tbody>
+            <tr><td><code>/control/mode</code></td><td><code>MANUAL</code> or <code>AUTO</code></td><td>Dashboard selection, read by ESP32</td></tr>
+            <tr><td><code>/control/bulb</code></td><td><code>true</code> or <code>false</code></td><td>Manual-mode request from dashboard</td></tr>
+            <tr><td><code>/current/bulbState</code></td><td>Actual current bulb state</td><td>Dashboard status display</td></tr>
+            <tr><td><code>/current/mode</code></td><td>Active operating mode</td><td>Dashboard status display</td></tr>
+            <tr><td><code>/current/ldrThreshold</code></td><td>Configured threshold, normally 3000</td><td>Dashboard status display</td></tr>
+            <tr><td><code>/history</code></td><td>Timestamped readings and automation state</td><td>History table and analysis</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="iot-summary"><strong>Keep Firebase protected.</strong> Require Firebase Authentication for dashboard access and configure Realtime Database rules for authorized users. Do not expose private Firebase credentials or leave production rules unrestricted.</p>
+    </section>
+
+    <section class="iot-section" id="manual">
+      <div class="iot-section-heading"><span>04 / USER-REQUESTED CONTROL</span><h2>MANUAL mode</h2></div>
+      <p class="iot-intro">When the selected mode is <code>MANUAL</code>, the dashboard's ON/OFF control writes a boolean to <code>/control/bulb</code>. The ESP32 reads the request and updates the relay output.</p>
+      <div class="iot-flow" aria-label="Dashboard request is written to Firebase, read by ESP32, and applied to GPIO 26 and relay">
+        <div class="iot-flow-step"><span>USER</span><strong>Dashboard</strong><p>Select ON / OFF</p></div>
+        <div class="iot-flow-step"><span>REQUEST</span><strong>Firebase</strong><p><code>/control/bulb</code></p></div>
+        <div class="iot-flow-step"><span>MODE</span><strong>ESP32</strong><p>MANUAL control logic</p></div>
+        <div class="iot-flow-step"><span>OUTPUT</span><strong>GPIO 26 → relay</strong><p>Requested bulb state</p></div>
+      </div>
+      <div class="iot-table-wrap">
+        <table class="iot-table">
+          <thead><tr><th scope="col">Firebase request</th><th scope="col">Expected output</th></tr></thead>
+          <tbody><tr><td><code>true</code></td><td>BULB ON</td></tr><tr><td><code>false</code></td><td>BULB OFF</td></tr></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="iot-section" id="automatic">
+      <div class="iot-section-heading"><span>05 / SENSOR-DRIVEN CONTROL</span><h2>AUTO mode with an LDR threshold</h2></div>
+      <p class="iot-intro">When mode is <code>AUTO</code>, the ESP32 compares the LDR reading against the configured threshold. For this project requirement, values above 3000 switch the bulb ON; values at or below 3000 switch it OFF.</p>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>LDR &gt; 3000</span><h3>BULB ON</h3><p>Light reading exceeds the configured threshold.</p></div>
+        <div class="iot-concept"><span>LDR ≤ 3000</span><h3>BULB OFF</h3><p>Light reading is at or below the threshold.</p></div>
+      </div>
+      <p class="iot-summary"><strong>Configured threshold:</strong> <code>ldrThreshold = 3000</code>. The active threshold is stored in Firebase and reported in current status so the dashboard can show the decision boundary being used.</p>
+      <div class="iot-flow" aria-label="Read LDR, compare with threshold 3000, set relay, update Firebase status">
+        <div class="iot-flow-step"><span>READ</span><strong>LDR value</strong></div>
+        <div class="iot-flow-step"><span>COMPARE</span><strong>Threshold 3000</strong></div>
+        <div class="iot-flow-step"><span>SWITCH</span><strong>Set relay state</strong></div>
+        <div class="iot-flow-step"><span>REPORT</span><strong>Update Firebase</strong></div>
+      </div>
+      <p class="iot-note">MANUAL mode follows the user's dashboard request. AUTO mode ignores the manual request while active and determines the output from the LDR comparison. Calibrate the threshold against readings from the actual sensor and environment.</p>
+    </section>
+
+    <section class="iot-section" id="status">
+      <div class="iot-section-heading"><span>06 / DEVICE STATUS &amp; HISTORY</span><h2>Report the operating condition</h2></div>
+      <p class="iot-intro">After applying the selected control logic, the ESP32 writes the actual state back to Firebase. The dashboard can then distinguish the user's requested value from the current device status.</p>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>BULB STATE</span><h3><code>/current/bulbState</code></h3><p>Boolean indicating the relay/bulb state reported by the ESP32.</p></div>
+        <div class="iot-concept"><span>OPERATING MODE</span><h3><code>/current/mode</code></h3><p>Shows whether the active behavior is MANUAL or AUTO.</p></div>
+      </div>
+      <p class="iot-copy">Also publish <code>/current/ldrThreshold</code>. Extend each history record with timestamp, temperature, humidity, LDR value, bulb state, operating mode, and LDR threshold. This makes it possible to review how environmental conditions related to appliance operation.</p>
+    </section>
+
+    <section class="iot-section" id="dashboard">
+      <div class="iot-section-heading"><span>07 / HOME AUTOMATION DASHBOARD</span><h2>Monitoring, controls &amp; analysis</h2></div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>ENVIRONMENT</span><h3>Live sensor readings</h3><p>Temperature, humidity, and LDR value from Firebase current data.</p></div>
+        <div class="iot-concept"><span>APPLIANCE</span><h3>Bulb and mode</h3><p>Bulb ON/OFF request, MANUAL/AUTO selector, and actual bulb status.</p></div>
+        <div class="iot-concept"><span>AUTOMATION</span><h3>LDR threshold</h3><p>Display the active threshold and the automatic switching rule.</p></div>
+        <div class="iot-concept"><span>ANALYSIS</span><h3>History</h3><p>Historical table, sensor graphs, bulb-state history, and CSV export.</p></div>
+      </div>
+      <h3 class="iot-subheading">Realtime update path</h3>
+      <div class="iot-flow" aria-label="ESP32 updates Firebase and a Firebase listener refreshes the dashboard">
+        <div class="iot-flow-step"><span>DEVICE</span><strong>ESP32 updates Firebase</strong></div>
+        <div class="iot-flow-step"><span>LISTENER</span><strong>Receives values</strong></div>
+        <div class="iot-flow-step"><span>INTERFACE</span><strong>Refreshes status</strong></div>
+        <div class="iot-flow-step"><span>USER</span><strong>Readings + controls</strong></div>
+      </div>
+      <p class="iot-note">Continue using the Task 4 authentication and monitoring flow. Add home-automation controls to the existing signed-in dashboard rather than creating a separate account or database.</p>
+    </section>
+
+    <section class="iot-section" id="history">
+      <div class="iot-section-heading"><span>08 / EXTENDED HISTORY</span><h2>Record environmental and appliance state</h2></div>
+      <p class="iot-intro">Extend Task 4 history records with automation data so each record captures the conditions and operating decision together.</p>
+      <pre class="iot-code"><code>/history/record_001
+{
+  "timestamp": 1758956400,
+  "temperature": 28.4,
+  "humidity": 52,
+  "ldr": 3250,
+  "bulbState": true,
+  "mode": "AUTO",
+  "ldrThreshold": 3000
+}</code></pre>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>01</span><h3>Historical table</h3><p>Show timestamp, temperature, humidity, LDR, bulb state, operating mode, and threshold.</p></div>
+        <div class="iot-concept"><span>02</span><h3>Data visualization</h3><p>Plot temperature, humidity, and LDR over time; include bulb-state history for context.</p></div>
+        <div class="iot-concept"><span>03</span><h3>CSV export</h3><p>Export the extended records for analysis outside the dashboard.</p></div>
+      </div>
+    </section>
+
+    <section class="iot-section" id="evidence">
+      <div class="iot-section-heading"><span>09 / PROJECT EVIDENCE</span><h2>Task 5 dashboard images</h2></div>
+      <p class="iot-intro">These supplied screenshots show the Task 4 launch page and dashboard that Task 5 extends with appliance controls and operating modes.</p>
+      <div class="iot-media">
+        <figure>
+          <a href="https://kishorekix28-dot.github.io/Portfolio/images/iot%205%20images/Screenshot%202026-09-28%20162553.png" target="_blank" rel="noopener noreferrer">
+            <img src="https://kishorekix28-dot.github.io/Portfolio/images/iot%205%20images/Screenshot%202026-09-28%20162553.png" alt="Launch page for the ESP32 environment monitoring system" />
+          </a>
+          <figcaption>Existing monitoring-system launch page: the starting point for Task 5.</figcaption>
+        </figure>
+        <figure>
+          <a href="https://kishorekix28-dot.github.io/Portfolio/images/iot%205%20images/Screenshot%202026-09-28%20162639.png" target="_blank" rel="noopener noreferrer">
+            <img src="https://kishorekix28-dot.github.io/Portfolio/images/iot%205%20images/Screenshot%202026-09-28%20162639.png" alt="Firebase dashboard with current sensor readings and light controls" />
+          </a>
+          <figcaption>Existing Firebase dashboard with sensor data and light controls; Task 5 extends it with MANUAL/AUTO state and threshold reporting.</figcaption>
+        </figure>
+      </div>
+      <h3 class="iot-subheading">Demonstration video</h3>
+      <p class="iot-note">The supplied clip is the Task 4 monitoring demonstration. It is included as baseline project context and does not demonstrate the new Task 5 relay or MANUAL/AUTO behavior.</p>
+      <div class="iot-media">
+        <figure>
+          <video controls preload="metadata" playsinline>
+            <source src="IOT%20IMAGES%20N%20VIDS/ASSIGNMENT%205.mp4" type="video/mp4" />
+            Your browser does not support embedded video. <a href="IOT%20IMAGES%20N%20VIDS/ASSIGNMENT%205.mp4">Open the supplied baseline video</a>.
+          </video>
+          <figcaption>Task 4 monitoring video supplied as baseline context, not a Task 5 relay demonstration.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="iot-section" id="testing">
+      <div class="iot-section-heading"><span>10 / VALIDATION PLAN</span><h2>Test the home-automation system</h2></div>
+      <p class="iot-intro">Verify relay and Firebase behavior on the physical setup. Test MANUAL and AUTO modes independently, then confirm status and history updates.</p>
+      <div class="iot-table-wrap">
+        <table class="iot-table">
+          <thead><tr><th scope="col">Test</th><th scope="col">Input</th><th scope="col">Expected result</th><th scope="col">Status</th></tr></thead>
+          <tbody>
+            <tr><td>Manual ON</td><td>MANUAL mode, bulb request <code>true</code></td><td>ESP32 switches relay on and reports <code>bulbState=true</code></td><td>Record result</td></tr>
+            <tr><td>Manual OFF</td><td>MANUAL mode, bulb request <code>false</code></td><td>ESP32 switches relay off and reports <code>bulbState=false</code></td><td>Record result</td></tr>
+            <tr><td>Automatic ON</td><td>AUTO mode, LDR &gt; 3000</td><td>Relay/bulb on; current mode, state, and threshold reported</td><td>Record result</td></tr>
+            <tr><td>Automatic OFF</td><td>AUTO mode, LDR ≤ 3000</td><td>Relay/bulb off; current mode, state, and threshold reported</td><td>Record result</td></tr>
+            <tr><td>History logging</td><td>Operate in both modes</td><td>History records include readings, state, mode, and threshold</td><td>Record result</td></tr>
+            <tr><td>Dashboard</td><td>Switch modes and update bulb request</td><td>Requested controls and reported state display correctly</td><td>Record result</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="iot-note">Verify mains-side relay operation safely. Disconnect power before wiring; use a properly rated, enclosed module and qualified help for mains connections.</p>
+    </section>
+
+    <section class="iot-section" id="safety">
+      <div class="iot-section-heading"><span>11 / ELECTRICAL SAFETY</span><h2>Relay and mains precautions</h2></div>
+      <aside class="iot-summary" role="alert" style="border-left-color:#f87171;background:rgba(248,113,113,0.08);padding:1rem;">
+        <strong>230 V mains can cause fatal electric shock or fire.</strong> Disconnect mains power before wiring. Use a relay rated for the load in an insulated enclosure, maintain isolation between mains and low-voltage electronics, and have mains wiring installed or inspected by a qualified person. Do not handle exposed live wiring during testing.
+      </aside>
+      <p class="iot-note">The ESP32 GPIO is a low-voltage control signal only. Do not connect a mains conductor directly to an ESP32 pin.</p>
+    </section>
+
+    <section class="iot-section" id="reflection">
+      <div class="iot-section-heading"><span>12 / TASK 5 OUTCOME</span><h2>Final system</h2></div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>BASE PLATFORM</span><h3>Task 4 Firebase</h3><p>Reuse authentication, sensor monitoring, Realtime Database, and the web dashboard.</p></div>
+        <div class="iot-concept"><span>NEW CONTROL</span><h3>Manual + AUTO</h3><p>Dashboard requests in MANUAL; LDR threshold decisions in AUTO.</p></div>
+        <div class="iot-concept"><span>DEVICE STATUS</span><h3>Reported state</h3><p>Store bulbState, mode, and ldrThreshold in current data.</p></div>
+        <div class="iot-concept"><span>ANALYSIS</span><h3>Extended history</h3><p>Correlate environmental readings with appliance state over time.</p></div>
+      </div>
+      <p class="iot-summary"><strong>Final outcome:</strong> The Task 4 Firebase IoT platform is extended into a home-automation system. Users can select MANUAL or AUTO mode from the dashboard. In MANUAL mode, Firebase carries the bulb request; in AUTO mode, the ESP32 compares the LDR reading with 3000. The resulting bulb state, mode, and threshold are reported to Firebase and added to historical data for analysis.<br /><strong>Dashboard / LDR &rarr; Firebase &rarr; ESP32 &rarr; Relay &rarr; Appliance</strong></p>
     </section>
 
     <nav class="iot-bottom-nav" aria-label="Assignment navigation">
-      <a class="btn btn-outline" href="iot.html">&larr; All IoT assignments</a>
+      <a class="btn btn-outline" href="iot-task-4.html">&larr; Assignment 04</a>
+      <a class="btn btn-outline" href="iot.html">All IoT assignments</a>
     </nav>
   </main>
 
