@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Firebase IoT Environment Monitoring | Kavipriya C A</title>
+<meta name="description" content="ESP32 environmental monitoring with DHT11, LDR, Firebase Realtime Database, authentication, and a web dashboard." />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="loading-screen" id="loadingScreen"><div class="loader-ring"></div></div>
+  <div id="navbar-root"></div>
+
+  <main id="main-content">
+    <header class="iot-hero">
+      <span class="eyebrow">IoT works / Task 04</span>
+      <h1>Firebase IoT Environment <span>Monitoring Platform</span></h1>
+      <p>Collect temperature, humidity, and ambient-light readings on an ESP32, store them in Firebase, and visualize live and historical data in an authenticated web dashboard.</p>
+      <div class="iot-meta" aria-label="Technologies">
+        <span class="tag">DHT11</span><span class="tag">LDR</span><span class="tag">ESP32</span><span class="tag">Wi-Fi</span><span class="tag">Firebase</span>
+      </div>
+      <nav class="iot-assignment-list" aria-label="On this page" style="margin-top:2rem;">
+        <div class="iot-assignment">
+          <span class="iot-assignment-number">04</span>
+          <div><h3>On this page</h3><p>Jump to a section</p></div>
+          <span class="iot-assignment-link">Overview</span>
+        </div>
+        <div class="iot-meta">
+          <a class="tag" href="#overview">01 Overview</a>
+          <a class="tag" href="#requirements">02 Requirements</a>
+          <a class="tag" href="#firebase">03 Firebase setup</a>
+          <a class="tag" href="#firmware">04 ESP32 integration</a>
+          <a class="tag" href="#dashboard">05 Web dashboard</a>
+          <a class="tag" href="#history">06 History &amp; visualization</a>
+          <a class="tag" href="#testing">07 Testing</a>
+          <a class="tag" href="#evidence">08 Evidence</a>
+          <a class="tag" href="#deployment">09 Deployment</a>
+          <a class="tag" href="#reflection">10 Final outcome</a>
+        </div>
+      </nav>
+    </header>
+
+    <section class="iot-section" id="overview">
+      <div class="iot-section-heading"><span>01 / PROJECT OVERVIEW</span><h2>Firebase-connected sensor monitoring</h2></div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>OBJECTIVE</span><h3>Monitor environmental readings</h3><p>Create a Firebase-based IoT backend and integrate an ESP32 to transmit temperature, humidity, and ambient-light readings in real time.</p></div>
+        <div class="iot-concept"><span>SYSTEM PURPOSE</span><h3>Sensor to authenticated dashboard</h3><p>The ESP32 reads a DHT11 and LDR, sends sensor data to Firebase Realtime Database over Wi-Fi, and an authenticated web dashboard presents current and historical readings.</p></div>
+      </div>
+      <p class="iot-summary"><strong>Project summary:</strong> The ESP32 collects environmental readings from the DHT11 and LDR and uploads them through Wi-Fi to Firebase. Firebase Authentication protects dashboard access, while real-time and historical sensor data are visualized through a web interface.</p>
+      <div class="iot-flow" aria-label="DHT11 and LDR to ESP32 to Wi-Fi to Firebase to dashboard">
+        <div class="iot-flow-step"><span>DHT11 + LDR</span><strong>Environmental readings</strong><p>Temperature, humidity, light</p></div>
+        <div class="iot-flow-step"><span>ESP32</span><strong>Wi-Fi + logic</strong><p>Reads and uploads sensor data</p></div>
+        <div class="iot-flow-step"><span>Firebase</span><strong>Realtime Database</strong><p>Current values and history</p></div>
+        <div class="iot-flow-step"><span>Dashboard</span><strong>Auth + visualizations</strong><p>Live and historical views</p></div>
+      </div>
+    </section>
+
+    <section class="iot-section" id="requirements">
+      <div class="iot-section-heading"><span>02 / SYSTEM REQUIREMENTS</span><h2>What the system provides</h2></div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>01 / SENSING</span><h3>Environment values</h3><p>Temperature, relative humidity, analog ambient-light level, and timestamp.</p></div>
+        <div class="iot-concept"><span>02 / CONNECTIVITY</span><h3>ESP32 + Wi-Fi</h3><p>Read sensor values, connect to the internet, and send updates to Firebase.</p></div>
+        <div class="iot-concept"><span>03 / CLOUD</span><h3>Firebase services</h3><p>Email/password authentication and Realtime Database for current and historical readings.</p></div>
+        <div class="iot-concept"><span>04 / DASHBOARD</span><h3>Visualize data</h3><p>Authenticated login, live values, historical graph, and data table.</p></div>
+      </div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>01</span><h3>Current sensor data</h3><p>Store the latest temperature, humidity, and LDR value under <code>/current</code> for real-time monitoring.</p></div>
+        <div class="iot-concept"><span>02</span><h3>Historical data</h3><p>Append periodic sensor records with timestamps under <code>/history</code> for graphing and tabular review.</p></div>
+        <div class="iot-concept"><span>03</span><h3>Secure dashboard access</h3><p>Require Firebase Email/Password authentication before allowing users to view the monitoring dashboard.</p></div>
+      </div>
+    </section>
+
+    <section class="iot-section" id="firebase">
+      <div class="iot-section-heading"><span>03 / FIREBASE CLOUD</span><h2>Project, authentication &amp; database</h2></div>
+      <h3 class="iot-subheading">Firebase project setup</h3>
+      <p class="iot-intro">Create a Firebase project, register the web application, and obtain its configuration parameters. Configure the project so the ESP32 can send sensor data and the authenticated web dashboard can read it. Enable Email/Password under Authentication sign-in methods and create a user account for dashboard access.</p>
+      <div class="iot-flow" aria-label="Firebase project setup">
+        <div class="iot-flow-step"><span>01</span><strong>Create project</strong></div>
+        <div class="iot-flow-step"><span>02</span><strong>Register web app</strong></div>
+        <div class="iot-flow-step"><span>03</span><strong>Email / Password auth</strong></div>
+        <div class="iot-flow-step"><span>04</span><strong>Realtime Database</strong></div>
+      </div>
+      <h3 class="iot-subheading">Suggested Realtime Database structure</h3>
+      <pre class="iot-code"><code>/
+|-- current
+|   |-- temperature: 28.4
+|   |-- humidity: 52
+|   |-- ldr: 2038
+|   `-- timestamp: 1758956400
+`-- history
+    |-- record_001
+    |   |-- temperature: 28.4
+    |   |-- humidity: 52
+    |   |-- ldr: 2038
+    |   `-- timestamp: 1758956400
+    `-- ...</code></pre>
+      <p class="iot-summary"><strong>Protect Firebase credentials and access.</strong> Use Firebase Authentication to gate dashboard access. Configure Realtime Database rules so only authenticated, authorized users can access data. Do not expose private credentials or leave production database rules open.</p>
+      <h3 class="iot-subheading">Authentication flow</h3>
+      <p class="iot-copy">User opens launch page &rarr; login page &rarr; Firebase Authentication &rarr; dashboard on success.</p>
+      <p class="iot-note">When sign-in fails, show a clear error and keep protected dashboard content inaccessible. Provide a logout action that ends the authenticated session.</p>
+    </section>
+
+    <section class="iot-section" id="firmware">
+      <div class="iot-section-heading"><span>04 / FIREBASE INTEGRATION</span><h2>Sensor data integration</h2></div>
+      <p class="iot-intro">The ESP32 joins Wi-Fi, initializes the DHT11 and LDR input, then authenticates with Firebase using the configured API key and Realtime Database URL. It periodically reads sensor values, uploads current readings and a timestamp, and writes historical records.</p>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>01</span><h3>Connect to Wi-Fi</h3><p>Start the station connection and wait for internet access before using Firebase.</p></div>
+        <div class="iot-concept"><span>02</span><h3>Initialize Firebase</h3><p>Install the Firebase ESP32 library and configure the API key, Realtime Database URL, and authentication details, then initialize the Firebase client.</p></div>
+        <div class="iot-concept"><span>03</span><h3>Read and publish sensors</h3><p>Read DHT11 temperature/humidity and the LDR ADC value; update the current database state.</p></div>
+        <div class="iot-concept"><span>04</span><h3>Upload current sensor values</h3><p>Write temperature, humidity, LDR reading, and timestamp to the <code>/current</code> node.</p></div>
+        <div class="iot-concept"><span>05</span><h3>Append history</h3><p>Periodically store sensor readings and a timestamp under <code>/history</code> for later review.</p></div>
+      </div>
+      <h3 class="iot-subheading">Libraries used</h3>
+      <div class="iot-table-wrap">
+        <table class="iot-table">
+          <thead><tr><th scope="col">Library / tool</th><th scope="col">Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>ESP32 board package</td><td>Board definitions and Wi-Fi support</td></tr>
+            <tr><td>DHT sensor library</td><td>Read temperature and humidity from DHT11</td></tr>
+            <tr><td>Adafruit Unified Sensor</td><td>Sensor abstraction dependency</td></tr>
+            <tr><td>Firebase ESP Client</td><td>ESP32 authentication and Realtime Database communication</td></tr>
+            <tr><td>Arduino IDE</td><td>Firmware editing and upload</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="iot-note">This project description specifies firmware behavior and configuration, not a verified source listing. Add the actual project sketch or repository when available.</p>
+    </section>
+
+    <section class="iot-section" id="dashboard">
+      <div class="iot-section-heading"><span>05 / WEB APPLICATION</span><h2>Dashboard experience</h2></div>
+      <p class="iot-intro">The web frontend uses HTML, CSS, JavaScript, Firebase Web SDK, and Chart.js. The user flow starts at a launch page, continues through an authenticated login page, and then opens the protected dashboard.</p>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>01 / LIVE</span><h3>Sensor cards</h3><p>Temperature in °C, humidity in %, and the raw LDR ADC value.</p></div>
+        <div class="iot-concept"><span>02 / VISUAL</span><h3>Temperature meter</h3><p>An analog-style meter presents the latest temperature at a glance.</p></div>
+        <div class="iot-concept"><span>03 / SENSOR</span><h3>Light level</h3><p>Display the current LDR analog reading as a live ambient-light indicator.</p></div>
+        <div class="iot-concept"><span>04 / HISTORY</span><h3>Graphs &amp; records</h3><p>Historical temperature, humidity, and LDR charts plus a data table.</p></div>
+      </div>
+      <h3 class="iot-subheading">Realtime updates</h3>
+      <div class="iot-flow" aria-label="Firebase realtime update flow">
+        <div class="iot-flow-step"><span>Firebase</span><strong><code>/current</code></strong></div>
+        <div class="iot-flow-step"><span>Web SDK</span><strong><code>onValue()</code></strong></div>
+        <div class="iot-flow-step"><span>Dashboard</span><strong>Update elements</strong></div>
+        <div class="iot-flow-step"><span>User</span><strong>Current readings</strong></div>
+      </div>
+      <p class="iot-copy">A realtime listener such as <code>onValue()</code> observes values under <code>/current</code>. When the ESP32 publishes a new sensor reading, JavaScript updates the temperature, humidity, and LDR displays without a manual refresh.</p>
+    </section>
+
+    <section class="iot-section" id="history">
+      <div class="iot-section-heading"><span>06 / DATA OVER TIME</span><h2>Historical logging &amp; visualization</h2></div>
+      <p class="iot-intro">The ESP32 periodically appends a history record containing temperature, humidity, LDR reading, and timestamp. The dashboard reads these records to build a historical table and graphs.</p>
+      <pre class="iot-code"><code>/history/{push-id}
+{
+  "timestamp": 1758956400,
+  "temperature": 28.2,
+  "humidity": 59,
+  "ldr": 2038
+}</code></pre>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>01</span><h3>History table</h3><p>Read records from <code>/history</code> and display timestamp, temperature, humidity, and LDR values in rows.</p></div>
+        <div class="iot-concept"><span>02</span><h3>Chart.js graphs</h3><p>Plot temperature versus time, humidity versus time, and LDR versus time from historical Firebase records.</p></div>
+        <div class="iot-concept"><span>03</span><h3>Data table</h3><p>Present historical sensor readings in a tabular format for comparison over time.</p></div>
+      </div>
+    </section>
+
+    <section class="iot-section" id="testing">
+      <div class="iot-section-heading"><span>07 / VALIDATION PLAN</span><h2>Test each module</h2></div>
+      <p class="iot-intro">Validate each stage independently before testing the full sensor-to-dashboard workflow. Replace the status column with observed outcomes after running the tests.</p>
+      <div class="iot-table-wrap">
+        <table class="iot-table">
+          <thead><tr><th scope="col">Test</th><th scope="col">Check</th><th scope="col">Expected behavior</th><th scope="col">Status</th></tr></thead>
+          <tbody>
+            <tr><td>DHT11</td><td>Temperature and humidity readings</td><td>Values update consistently without invalid sensor readings</td><td>Record result</td></tr>
+            <tr><td>LDR</td><td>Analog ADC value</td><td>Reading changes with ambient light; approximate observed normal value: 2038</td><td>Record result</td></tr>
+            <tr><td>Firebase</td><td><code>/current</code> values</td><td>Temperature, humidity, LDR, and timestamp update in Realtime Database</td><td>Record result</td></tr>
+            <tr><td>Authentication</td><td>Email/Password login</td><td>Valid user reaches dashboard; invalid login shows an error</td><td>Record result</td></tr>
+            <tr><td>Realtime dashboard</td><td>Temperature, humidity, and LDR</td><td>Dashboard values update from Firebase without manual refresh</td><td>Record result</td></tr>
+            <tr><td>History</td><td>Wait for logging interval</td><td>Timestamped sensor records appear under <code>/history</code></td><td>Record result</td></tr>
+            <tr><td>Visualization</td><td>Historical graph and data table</td><td>History values appear correctly in the graph and table</td><td>Record result</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="iot-note">LDR readings depend on the sensor module, ADC configuration, and ambient lighting. Compare readings with the environment during testing.</p>
+    </section>
+
+    <section class="iot-section" id="evidence">
+      <div class="iot-section-heading"><span>08 / PROJECT EVIDENCE</span><h2>Firebase and dashboard screenshots</h2></div>
+      <p class="iot-intro">These screenshots document the Firebase Realtime Database, dashboard launch page, sign-in screen, and live environment dashboard.</p>
+      <div class="iot-media">
+        <figure>
+          <a href="https://kishorekix28-dot.github.io/Portfolio/images/iot%204%20images/Screenshot%202026-09-28%20162424.png" target="_blank" rel="noopener noreferrer"><img src="https://kishorekix28-dot.github.io/Portfolio/images/iot%204%20images/Screenshot%202026-09-28%20162424.png" alt="Firebase Realtime Database with current sensor readings and historical records" /></a>
+          <figcaption>Firebase Realtime Database documenting the sensor-data backend and history.</figcaption>
+        </figure>
+        <figure>
+          <a href="https://kishorekix28-dot.github.io/Portfolio/images/iot%204%20images/Screenshot%202026-09-28%20162553.png" target="_blank" rel="noopener noreferrer"><img src="https://kishorekix28-dot.github.io/Portfolio/images/iot%204%20images/Screenshot%202026-09-28%20162553.png" alt="Launch page for the ESP32 IoT Environmental Monitoring System" /></a>
+          <figcaption>Dashboard launch page for the ESP32-based IoT Environmental Monitoring System.</figcaption>
+        </figure>
+        <figure>
+          <a href="https://kishorekix28-dot.github.io/Portfolio/images/iot%204%20images/Screenshot%202026-09-28%20162607.png" target="_blank" rel="noopener noreferrer"><img src="https://kishorekix28-dot.github.io/Portfolio/images/iot%204%20images/Screenshot%202026-09-28%20162607.png" alt="Firebase email and password login page" /></a>
+          <figcaption>Firebase Email/Password login screen before entering the protected dashboard.</figcaption>
+        </figure>
+        <figure>
+          <a href="https://kishorekix28-dot.github.io/Portfolio/images/iot%204%20images/Screenshot%202026-09-28%20162639.png" target="_blank" rel="noopener noreferrer"><img src="https://kishorekix28-dot.github.io/Portfolio/images/iot%204%20images/Screenshot%202026-09-28%20162639.png" alt="Environment dashboard with temperature, humidity, and LDR readings" /></a>
+          <figcaption>Live dashboard showing current temperature, humidity, and ambient-light readings.</figcaption>
+        </figure>
+      </div>
+    </section>
+
+    <section class="iot-section" id="deployment">
+      <div class="iot-section-heading"><span>09 / WEB DEPLOYMENT</span><h2>Firebase Hosting structure</h2></div>
+      <p class="iot-intro">The dashboard frontend can be deployed using Firebase Hosting. Keep client application files in the Hosting public directory and configure Firebase Authentication and database access separately.</p>
+      <pre class="iot-code"><code>firebase-iot-dashboard/
+|-- firebase.json
+`-- public/
+    |-- index.html
+    |-- style.css
+    `-- app.js</code></pre>
+      <div class="iot-flow" aria-label="Sensor and device data flow to hosted Firebase dashboard">
+        <div class="iot-flow-step"><span>SENSORS</span><strong>DHT11 + LDR</strong></div>
+        <div class="iot-flow-step"><span>DEVICE</span><strong>ESP32 + Wi-Fi</strong></div>
+        <div class="iot-flow-step"><span>CLOUD</span><strong>Firebase Auth + Database</strong></div>
+        <div class="iot-flow-step"><span>WEB</span><strong>Hosted dashboard</strong></div>
+      </div>
+      <p class="iot-copy">Firebase Authentication protects dashboard access; Realtime Database stores current sensor telemetry and history; Firebase Hosting serves the web application.</p>
+    </section>
+
+    <section class="iot-section" id="reflection">
+      <div class="iot-section-heading"><span>10 / PROJECT SUMMARY</span><h2>Final system</h2></div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>DATA SOURCE</span><h3>Environmental readings</h3><p>Temperature and humidity from DHT11, plus ambient-light readings from the LDR.</p></div>
+        <div class="iot-concept"><span>SOFTWARE</span><h3>Embedded + web</h3><p>Arduino IDE/C++, HTML, CSS, JavaScript, and Chart.js.</p></div>
+        <div class="iot-concept"><span>CLOUD</span><h3>Firebase</h3><p>Authentication, Realtime Database, and Hosting.</p></div>
+        <div class="iot-concept"><span>FEATURES</span><h3>Monitor + visualize</h3><p>Authenticated access, live readings, historical records, graphs, and data table.</p></div>
+      </div>
+      <p class="iot-summary"><strong>Final outcome:</strong> A Firebase-integrated IoT monitoring platform where the ESP32 collects environmental parameters from DHT11 and LDR sensors and transmits them to Firebase Realtime Database through Wi-Fi. Firebase Authentication provides secure dashboard access, while real-time and historical sensor data are visualized through a web interface.<br /><strong>DHT11 + LDR &rarr; ESP32 &rarr; Wi-Fi &rarr; Firebase Realtime Database &rarr; Authenticated Dashboard</strong></p>
+      <h3 class="iot-subheading">Project repository</h3>
+      <p class="iot-copy">Add the repository link when the source code and deployment files are published.</p>
+    </section>
+
+    <nav class="iot-bottom-nav" aria-label="Assignment navigation">
+      <a class="btn btn-outline" href="iot-task-3.html">&larr; Assignment 03</a>
+      <a class="btn btn-outline" href="iot.html">All IoT assignments</a>
+    </nav>
+  </main>
+
+  <div id="footer-root"></div>
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">&uarr;</button>
+  <script src="js/profile.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/render-iot.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>

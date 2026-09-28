@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Adafruit IO Dashboard &amp; MQTT LED Control | Kavipriya C A</title>
+<meta name="description" content="Control an ESP32 LED remotely using an Adafruit IO dashboard, MQTT feed, and GPIO output." />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="loading-screen" id="loadingScreen"><div class="loader-ring"></div></div>
+  <div id="navbar-root"></div>
+
+  <main id="main-content">
+    <header class="iot-hero">
+      <span class="eyebrow">IoT works / Task 02</span>
+      <h1>Adafruit IO Dashboard <span>&amp; MQTT LED Control</span></h1>
+      <p>Move LED control from a local ESP32 page to the cloud, using an MQTT feed to connect a dashboard with physical hardware.</p>
+      <div class="iot-meta" aria-label="Technologies">
+        <span class="tag">ESP32</span><span class="tag">Adafruit IO</span><span class="tag">MQTT</span><span class="tag">Cloud</span>
+      </div>
+      <nav class="iot-assignment-list" aria-label="On this page" style="margin-top:2rem;">
+        <div class="iot-assignment">
+          <span class="iot-assignment-number">02</span>
+          <div><h3>On this page</h3><p>Jump to a section</p></div>
+          <span class="iot-assignment-link">Overview</span>
+        </div>
+        <div class="iot-meta">
+          <a class="tag" href="#overview">01 Overview</a>
+          <a class="tag" href="#mqtt">02 MQTT concepts</a>
+          <a class="tag" href="#system">03 System design</a>
+          <a class="tag" href="#setup">04 Adafruit IO setup</a>
+          <a class="tag" href="#dashboard">05 Dashboard</a>
+          <a class="tag" href="#hardware">06 Hardware</a>
+          <a class="tag" href="#implementation">07 Firmware</a>
+          <a class="tag" href="#video">08 Evidence &amp; demo</a>
+          <a class="tag" href="#challenges">09 Challenges</a>
+          <a class="tag" href="#reflection">10 Reflection</a>
+        </div>
+      </nav>
+    </header>
+
+    <section class="iot-section" id="overview">
+      <div class="iot-section-heading"><span>01 / THE CHALLENGE</span><h2>Overview</h2></div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>OBJECTIVE</span><h3>Cloud-connected LED control</h3><p>Develop a cloud-connected IoT system using an ESP32, MQTT, and Adafruit IO so a user can control an LED remotely from a web dashboard.</p></div>
+        <div class="iot-concept"><span>PROBLEM</span><h3>Go beyond the local network</h3><p>Task 1 controlled the LED through a webpage hosted directly on the ESP32, normally requiring the browser and board to share a local network. This task adds cloud messaging so commands can travel through the internet.</p></div>
+      </div>
+      <p class="iot-summary"><strong>Project summary:</strong> The ESP32 connects to the internet and authenticates with the Adafruit IO MQTT broker. A dashboard control publishes ON or OFF to the <code>bulb-control</code> feed. The ESP32 subscribes to that feed and sets GPIO 2 to control the LED.</p>
+    </section>
+
+    <section class="iot-section" id="mqtt">
+      <div class="iot-section-heading"><span>02 / THE COMMUNICATION MODEL</span><h2>Dashboard, broker, device</h2></div>
+      <p class="iot-intro">MQTT uses a lightweight publish/subscribe model. The publisher and subscriber communicate through a broker instead of making a direct connection to each other.</p>
+      <div class="iot-flow" aria-label="Dashboard publishes through Adafruit IO broker to the ESP32 subscriber and LED">
+        <div class="iot-flow-step"><span>Dashboard</span><strong>Publisher</strong><p>Publishes ON or OFF</p></div>
+        <div class="iot-flow-step"><span>Adafruit IO</span><strong>MQTT broker</strong><p>Routes feed messages</p></div>
+        <div class="iot-flow-step"><span>ESP32</span><strong>Subscriber</strong><p>Reads the feed value</p></div>
+        <div class="iot-flow-step"><span>GPIO 2</span><strong>LED ON / OFF</strong><p>HIGH or LOW output</p></div>
+      </div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>01 / PUBLISHER</span><h3>Dashboard</h3><p>The dashboard publishes the selected ON or OFF value when the user changes the LED control.</p></div>
+        <div class="iot-concept"><span>02 / BROKER</span><h3>Adafruit IO</h3><p>The broker accepts published messages and forwards them to connected clients subscribed to the matching feed.</p></div>
+        <div class="iot-concept"><span>03 / CHANNEL</span><h3>Feed / topic</h3><p>A named data channel. Adafruit IO exposes feeds as MQTT topics for sending and receiving values.</p></div>
+        <div class="iot-concept"><span>04 / SUBSCRIBER</span><h3>ESP32</h3><p>The ESP32 subscriber listens for feed updates and changes the LED output when a command arrives.</p></div>
+      </div>
+      <p class="iot-summary"><strong>MQTT feed / topic:</strong> <code>Kixorr_28/feeds/bulb-control</code>. This is the account-specific feed path. The AIO Key is used for authentication and must remain private.</p>
+      <h3 class="iot-subheading">Why MQTT?</h3>
+      <p class="iot-copy">MQTT (Message Queuing Telemetry Transport) is a lightweight messaging protocol commonly used in IoT. Its publish/subscribe model separates the dashboard from the hardware: the dashboard publishes to a feed, while the ESP32 subscribes to it. Adafruit IO's broker routes the message between them.</p>
+    </section>
+
+    <section class="iot-section" id="system">
+      <div class="iot-section-heading"><span>03 / END-TO-END OPERATION</span><h2>System design &amp; data flow</h2></div>
+      <p class="iot-intro">The full system contains the user, Adafruit IO dashboard, MQTT broker/feed, ESP32 subscriber, and GPIO-controlled LED.</p>
+      <ol class="iot-steps">
+        <li>The ESP32 joins a Wi-Fi network with internet access.</li>
+        <li>The ESP32 connects and authenticates with the Adafruit IO MQTT broker.</li>
+        <li>The device subscribes to <code>Kixorr_28/feeds/bulb-control</code>.</li>
+        <li>The user opens the Adafruit IO dashboard and selects the LED control.</li>
+        <li>The dashboard publishes the selected ON or OFF value to the feed.</li>
+        <li>The broker receives the value and forwards it to the subscribed ESP32.</li>
+        <li>The ESP32 reads the message and updates the LED GPIO output.</li>
+      </ol>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>ON COMMAND</span><h3>User selects ON</h3><p>Dashboard publishes ON; the feed forwards it; the ESP32 sets GPIO HIGH and the LED turns on.</p></div>
+        <div class="iot-concept"><span>OFF COMMAND</span><h3>User selects OFF</h3><p>Dashboard publishes OFF; the feed forwards it; the ESP32 sets GPIO LOW and the LED turns off.</p></div>
+      </div>
+    </section>
+
+    <section class="iot-section" id="setup">
+      <div class="iot-section-heading"><span>04 / CLOUD CONFIGURATION</span><h2>Adafruit IO account &amp; feed</h2></div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>01</span><h3>Create an Adafruit IO account</h3><p>The account provides a username, AIO Key, feeds, dashboards, and MQTT access. The username identifies the account; the AIO Key authenticates the device.</p></div>
+        <div class="iot-concept"><span>02</span><h3>Create the <code>bulb-control</code> feed</h3><p>Create a feed using the exact name <code>bulb-control</code>. This feed stores control values and is the MQTT channel used by both the dashboard and ESP32.</p></div>
+        <div class="iot-concept"><span>03</span><h3>Choose the feed values</h3><p>Use the text values <code>ON</code> and <code>OFF</code>. The sketch compares each received value with these exact strings.</p></div>
+        <div class="iot-concept"><span>04</span><h3>Configure device credentials</h3><p>Enter the Wi-Fi name/password, Adafruit IO username, and AIO Key in the local sketch. Keep the real credentials out of screenshots and public source control.</p></div>
+      </div>
+      <p class="iot-summary"><strong>Keep credentials private.</strong> Use placeholders in source code shown publicly. Never commit your Wi-Fi password or Adafruit IO AIO Key to a public repository.</p>
+      <h3 class="iot-subheading">Connection parameters</h3>
+      <div class="iot-table-wrap">
+        <table class="iot-table">
+          <thead><tr><th scope="col">Parameter</th><th scope="col">Value / role</th></tr></thead>
+          <tbody>
+            <tr><td>MQTT broker</td><td><code>io.adafruit.com</code></td></tr>
+            <tr><td>MQTT port</td><td><code>1883</code></td></tr>
+            <tr><td>Feed name</td><td><code>bulb-control</code></td></tr>
+            <tr><td>Feed path</td><td><code>Kixorr_28/feeds/bulb-control</code></td></tr>
+            <tr><td>Publisher</td><td>Adafruit IO dashboard control widget</td></tr>
+            <tr><td>Subscriber</td><td>ESP32 MQTT client</td></tr>
+            <tr><td>Payload values</td><td><code>ON</code> / <code>OFF</code></td></tr>
+            <tr><td>Transport</td><td>Wi-Fi and internet</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="iot-section" id="dashboard">
+      <div class="iot-section-heading"><span>05 / USER CONTROL</span><h2>Dashboard configuration</h2></div>
+      <p class="iot-intro">The Adafruit IO dashboard is the user-facing control surface. Add a control widget and connect it to the <code>bulb-control</code> feed. Configure the widget to publish the matching text value for each state.</p>
+      <p style="margin-top:1rem;"><a class="btn btn-outline" href="https://io.adafruit.com/kavilakshana/dashboards/bulb-control" target="_blank" rel="noopener noreferrer">IO - bulb control &rarr;</a></p>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>ON</span><h3>LED on</h3><p>The widget publishes <code>ON</code> to the feed. The ESP32 receives the message and writes HIGH to GPIO 2.</p></div>
+        <div class="iot-concept"><span>OFF</span><h3>LED off</h3><p>The widget publishes <code>OFF</code> to the feed. The ESP32 receives the message and writes LOW to GPIO 2.</p></div>
+      </div>
+      <h3 class="iot-subheading">Dashboard setup checklist</h3>
+      <ol class="iot-steps">
+        <li>Create a dashboard in Adafruit IO.</li>
+        <li>Add a control block/widget to the dashboard.</li>
+        <li>Select the <code>bulb-control</code> feed for that widget.</li>
+        <li>Configure its ON and OFF values as uppercase text.</li>
+        <li>Save and test the dashboard while the ESP32 is connected.</li>
+      </ol>
+    </section>
+
+    <section class="iot-section" id="hardware">
+      <div class="iot-section-heading"><span>06 / DEVICE SETUP</span><h2>Hardware &amp; wiring</h2></div>
+      <div class="iot-table-wrap">
+        <table class="iot-table">
+          <thead><tr><th scope="col">Component</th><th scope="col">Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>ESP32 development board</td><td>Connects to Wi-Fi and runs the MQTT client</td></tr>
+            <tr><td>LED</td><td>Output device controlled through the cloud dashboard</td></tr>
+            <tr><td>Resistor</td><td>Limits LED current</td></tr>
+            <tr><td>Breadboard &amp; jumper wires</td><td>Prototyping and circuit connections</td></tr>
+            <tr><td>USB cable</td><td>Power and programming</td></tr>
+            <tr><td>Wi-Fi with internet access</td><td>Required for the Adafruit IO connection</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3 class="iot-subheading">Software &amp; platforms</h3>
+      <div class="iot-table-wrap">
+        <table class="iot-table">
+          <thead><tr><th scope="col">Software / platform</th><th scope="col">Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>Arduino IDE</td><td>Write and upload the ESP32 sketch</td></tr>
+            <tr><td>ESP32 board package</td><td>Adds ESP32 board support to Arduino IDE</td></tr>
+            <tr><td>Adafruit IO</td><td>Cloud feeds, dashboards, and MQTT broker</td></tr>
+            <tr><td>Adafruit MQTT library</td><td>Provides MQTT client and feed subscription classes</td></tr>
+            <tr><td>Web browser</td><td>Open and operate the Adafruit IO dashboard</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3 class="iot-subheading">LED circuit</h3>
+      <p class="iot-copy"><strong>GPIO 2:</strong> Resistor &rarr; LED anode<br /><strong>GND:</strong> LED cathode / ground</p>
+      <p class="iot-note">Confirm the correct onboard LED pin for your ESP32 board. An external LED must use a current-limiting resistor.</p>
+    </section>
+
+    <section class="iot-section" id="implementation">
+      <div class="iot-section-heading"><span>07 / FIRMWARE</span><h2>ESP32 MQTT subscriber</h2></div>
+      <p class="iot-intro">Join Wi-Fi, connect to the broker, subscribe to the feed, and update GPIO. Install the ESP32 board package and Adafruit MQTT library in Arduino IDE. Replace the placeholders privately before uploading.</p>
+      <p class="iot-code-label">ESP32_Adafruit_IO_MQTT.ino</p>
+      <pre class="iot-code"><code>#include &lt;WiFi.h&gt;
+#include "Adafruit_MQTT.h"
+#include "Adafruit_MQTT_Client.h"
+
+#define WIFI_SSID "YOUR_WIFI_NAME"
+#define WIFI_PASSWORD "YOUR_WIFI_PASSWORD"
+#define AIO_SERVER "io.adafruit.com"
+#define AIO_SERVERPORT 1883
+#define AIO_USERNAME "Kixorr_28"
+#define AIO_KEY "YOUR_ADAFRUIT_IO_KEY"
+#define LED_PIN 2
+
+WiFiClient client;
+Adafruit_MQTT_Client mqtt(
+  &amp;client, AIO_SERVER, AIO_SERVERPORT, AIO_USERNAME, AIO_KEY);
+
+Adafruit_MQTT_Subscribe bulbControl = Adafruit_MQTT_Subscribe(
+  &amp;mqtt, AIO_USERNAME "/feeds/bulb-control");
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
+
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
+  Serial.print("Connecting to Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.println("Wi-Fi connected");
+  Serial.print("IP Address: ");
+  Serial.println(WiFi.localIP());
+
+  mqtt.subscribe(&amp;bulbControl);
+}
+
+void connectMQTT() {
+  int8_t result;
+  if (mqtt.connected()) return;
+
+  Serial.print("Connecting to Adafruit IO...");
+  while ((result = mqtt.connect()) != 0) {
+    Serial.println(mqtt.connectErrorString(result));
+    mqtt.disconnect();
+    delay(5000);
+  }
+  Serial.println("Connected to Adafruit IO");
+}
+
+void loop() {
+  connectMQTT();
+  mqtt.processPackets(1000);
+
+  Adafruit_MQTT_Subscribe *subscription;
+  while ((subscription = mqtt.readSubscription(1000))) {
+    if (subscription == &amp;bulbControl) {
+      String command = (char *)bulbControl.lastread;
+      command.trim();
+      Serial.print("Received: ");
+      Serial.println(command);
+
+      if (command == "ON") {
+        digitalWrite(LED_PIN, HIGH);
+        Serial.println("LED ON");
+      } else if (command == "OFF") {
+        digitalWrite(LED_PIN, LOW);
+        Serial.println("LED OFF");
+      }
+    }
+  }
+}</code></pre>
+      <h3 class="iot-subheading">Important code sections</h3>
+      <ul class="iot-steps">
+        <li><code>WiFi.begin()</code> starts the ESP32 Wi-Fi connection; the board needs internet access to reach the cloud broker.</li>
+        <li>The broker host, port, account username, and AIO Key configure the MQTT client.</li>
+        <li><code>Adafruit_MQTT_Subscribe</code> binds the client to the account's <code>bulb-control</code> feed.</li>
+        <li><code>mqtt.connect()</code> authenticates with Adafruit IO and retries after a failed connection.</li>
+        <li><code>mqtt.processPackets()</code> and <code>mqtt.readSubscription()</code> process incoming messages.</li>
+        <li>The received payload is trimmed and compared with ON/OFF before GPIO 2 is updated.</li>
+      </ul>
+    </section>
+
+    <section class="iot-section" id="video">
+      <div class="iot-section-heading"><span>08 / TASK DEMONSTRATION</span><h2>Evidence &amp; demo</h2></div>
+      <p class="iot-intro">The supplied project image and demonstration video are included below. The video demonstrates the dashboard-to-device workflow and hardware response.</p>
+      <div class="iot-media">
+        <figure>
+          <img src="IOT%20IMAGES%20N%20VIDS/ASSIGNMENT%202%20PICS.jpeg" alt="Assignment 2 Adafruit IO and ESP32 project evidence" />
+          <figcaption>Assignment 2 project image.</figcaption>
+        </figure>
+        <figure>
+          <video controls preload="metadata" playsinline>
+            <source src="IOT%20IMAGES%20N%20VIDS/ASSIGNMENT%202.mp4" type="video/mp4" />
+            Your browser does not support embedded video. <a href="IOT%20IMAGES%20N%20VIDS/ASSIGNMENT%202.mp4">Open the Assignment 2 video</a>.
+          </video>
+          <figcaption>Adafruit IO MQTT LED control demonstration.</figcaption>
+        </figure>
+      </div>
+      <h3 class="iot-subheading">Dashboard screenshots to add</h3>
+      <ul class="iot-steps">
+        <li>Adafruit IO account/dashboard overview</li>
+        <li>The <code>bulb-control</code> feed</li>
+        <li>Dashboard with ON selected</li>
+        <li>Dashboard with OFF selected</li>
+        <li>Feed activity showing published values</li>
+      </ul>
+      <h3 class="iot-subheading">Capture in the demonstration video</h3>
+      <ul class="iot-steps">
+        <li>ESP32 powered on and connected to Wi-Fi</li>
+        <li>Adafruit IO dashboard and <code>bulb-control</code> feed</li>
+        <li>ON and OFF commands changing the physical LED</li>
+        <li>Serial Monitor showing received values</li>
+      </ul>
+    </section>
+
+    <section class="iot-section" id="challenges">
+      <div class="iot-section-heading"><span>09 / DEBUG NOTES</span><h2>Challenges &amp; fixes</h2></div>
+      <ul class="iot-steps">
+        <li>MQTT connection failed</li>
+        <li>Connected, but no LED command arrives</li>
+        <li>Authentication was rejected</li>
+        <li>Message arrives but LED does not change</li>
+        <li>Local Task 1 worked, but remote control does not</li>
+      </ul>
+    </section>
+
+    <section class="iot-section" id="reflection">
+      <div class="iot-section-heading"><span>10 / WHAT I LEARNED</span><h2>Learning reflection</h2></div>
+      <p class="iot-intro">This task demonstrates how a cloud platform can connect a physical device to a remote dashboard. I learned the MQTT roles of publisher, subscriber, broker, and feed, and how Adafruit IO forwards a dashboard command to an ESP32. Compared with the local web-server approach in Task 1, cloud messaging makes remote control possible wherever the device has internet access.</p>
+      <p class="iot-summary"><strong>Final result:</strong> The Adafruit IO dashboard publishes a control value to the <code>bulb-control</code> feed. The MQTT broker forwards it to the subscribed ESP32, which sets GPIO 2 HIGH or LOW and changes the LED state. This demonstrates remote cloud-based control and establishes a foundation for controlling sensors and other actuators.<br /><strong>Dashboard &rarr; MQTT Broker &rarr; ESP32 &rarr; GPIO &rarr; LED</strong></p>
+      <h3 class="iot-subheading">Project repository</h3>
+      <p class="iot-copy">Repository link will be added when the project files are published.</p>
+      <h3 class="iot-subheading">Suggested repository structure</h3>
+      <pre class="iot-code"><code>Task-2-Adafruit-IO-MQTT/
+|-- ESP32_Adafruit_IO_MQTT.ino
+|-- README.md
+|-- circuit/
+|   `-- circuit-diagram.png
+|-- screenshots/
+|   |-- adafruit-dashboard.png
+|   |-- bulb-control-feed.png
+|   |-- led-on.png
+|   `-- led-off.png
+|-- photos/
+|   `-- hardware-setup.jpg
+`-- video/
+    `-- demo-link.txt</code></pre>
+    </section>
+
+    <nav class="iot-bottom-nav" aria-label="Assignment navigation">
+      <a class="btn btn-outline" href="iot-task-1.html">&larr; Assignment 01</a>
+      <a class="btn btn-outline" href="iot.html">All IoT assignments</a>
+    </nav>
+  </main>
+
+  <div id="footer-root"></div>
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">&uarr;</button>
+  <script src="js/profile.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/render-iot.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>

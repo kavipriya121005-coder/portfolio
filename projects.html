@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Projects | Kavipriya C A</title>
+<meta name="description" content="Projects built by Kavipriya C A, including a cloud-based task manager web application." />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="loading-screen" id="loadingScreen"><div class="loader-ring"></div></div>
+  <div id="navbar-root"></div>
+
+  <main id="main-content">
+    <section class="page-hero" id="page-hero"></section>
+    <section class="section">
+      <div class="toolbar">
+        <div class="search-bar">
+          <span class="icon-slot" id="searchIcon"></span>
+          <input type="text" id="searchInput" placeholder="Search projects, technologies..." aria-label="Search projects" />
+        </div>
+        <div class="filter-chips" id="filterChips" aria-label="Filter projects by category"></div>
+      </div>
+      <div class="grid" id="projectsRoot"></div>
+      <p class="empty-state" id="emptyState" hidden>No projects match your search or filter.</p>
+    </section>
+  </main>
+
+  <div id="footer-root"></div>
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">↑</button>
+  <div class="modal-overlay" id="modalOverlay"><div class="modal" id="modalRoot" role="dialog" aria-modal="true"></div></div>
+
+  <script src="js/profile.js"></script>
+  <script src="js/projects.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/render-projects.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>

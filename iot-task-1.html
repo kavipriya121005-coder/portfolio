@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ESP32 Web Server &amp; HTML LED Control | Kavipriya C A</title>
+<meta name="description" content="An ESP32 hosts a local web page that controls an LED over Wi-Fi using HTTP requests and GPIO." />
+<link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <div class="loading-screen" id="loadingScreen"><div class="loader-ring"></div></div>
+  <div id="navbar-root"></div>
+
+  <main id="main-content">
+    <header class="iot-hero">
+      <span class="eyebrow">IoT works / Task 01</span>
+      <h1>ESP32 Web Server <span>&amp; HTML LED Control</span></h1>
+      <p>A local web interface that turns a browser click into a physical output: connect, request, respond.</p>
+      <div class="iot-meta" aria-label="Technologies">
+        <span class="tag">ESP32</span><span class="tag">Wi-Fi</span><span class="tag">HTTP</span><span class="tag">GPIO</span>
+      </div>
+      <nav class="iot-assignment-list" aria-label="On this page" style="margin-top:2rem;">
+        <div class="iot-assignment">
+          <span class="iot-assignment-number">01</span>
+          <div><h3>On this page</h3><p>Jump to a section</p></div>
+          <span class="iot-assignment-link">Overview</span>
+        </div>
+        <div class="iot-meta">
+          <a class="tag" href="#overview">01 Overview</a>
+          <a class="tag" href="#system">02 System design</a>
+          <a class="tag" href="#hardware">03 Hardware</a>
+          <a class="tag" href="#implementation">04 Implementation</a>
+          <a class="tag" href="#evidence">05 Evidence</a>
+          <a class="tag" href="#reflection">06 Reflection</a>
+        </div>
+      </nav>
+    </header>
+
+    <section class="iot-section" id="overview">
+      <div class="iot-section-heading"><span>01 / THE CHALLENGE</span><h2>Overview</h2></div>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>OBJECTIVE</span><h3>Browser-based LED control</h3><p>Develop a simple IoT system using an ESP32 that hosts a web server and lets a user control an LED through a browser over Wi-Fi.</p></div>
+        <div class="iot-concept"><span>PROBLEM</span><h3>Control without a physical switch</h3><p>An LED is usually controlled with a physical switch or pre-programmed logic. This project demonstrates remote control through a web interface.</p></div>
+      </div>
+      <p class="iot-summary"><strong>Project summary:</strong> The ESP32 joins a Wi-Fi network and serves an HTML page. ON and OFF controls send HTTP requests that change the LED's GPIO state.</p>
+    </section>
+
+    <section class="iot-section" id="system">
+      <div class="iot-section-heading"><span>02 / SYSTEM DESIGN</span><h2>From browser to output</h2></div>
+      <p class="iot-intro">The browser and ESP32 communicate over the same local network using HTTP.</p>
+      <div class="iot-flow" aria-label="Browser to Wi-Fi to ESP32 web server to LED GPIO">
+        <div class="iot-flow-step"><span>Browser</span><strong>ON / OFF click</strong><p>User selects an action</p></div>
+        <div class="iot-flow-step"><span>Wi-Fi</span><strong>Local network</strong><p>HTTP request is sent</p></div>
+        <div class="iot-flow-step"><span>ESP32</span><strong>Web server</strong><p>Reads the request path</p></div>
+        <div class="iot-flow-step"><span>GPIO 2</span><strong>LED ON / OFF</strong><p>HIGH or LOW output</p></div>
+      </div>
+      <p class="iot-copy"><code>GET /LED=ON</code> sets GPIO HIGH. <code>GET /LED=OFF</code> sets GPIO LOW.</p>
+      <h3 class="iot-subheading">Core concepts</h3>
+      <div class="iot-concepts">
+        <div class="iot-concept"><span>01</span><h3>ESP32 web server</h3><p>Hosts the HTML page and processes browser requests on port 80.</p></div>
+        <div class="iot-concept"><span>02</span><h3>Wi-Fi</h3><p>Connects the ESP32 and browser device to the same local network.</p></div>
+        <div class="iot-concept"><span>03</span><h3>HTTP request</h3><p>The URL path identifies whether the user requested LED ON or LED OFF.</p></div>
+        <div class="iot-concept"><span>04</span><h3>HTML interface</h3><p>Two browser controls send the corresponding request to the ESP32.</p></div>
+      </div>
+      <h3 class="iot-subheading">Data flow</h3>
+      <ol class="iot-steps">
+        <li>ESP32 connects to Wi-Fi and starts its web server.</li>
+        <li>The IP address is read from the Arduino Serial Monitor.</li>
+        <li>The user opens that address in a browser on the same network.</li>
+        <li>ESP32 serves the LED control page.</li>
+        <li>A button click sends <code>/LED=ON</code> or <code>/LED=OFF</code>.</li>
+        <li>The ESP32 updates GPIO 2 and returns the page.</li>
+      </ol>
+    </section>
+
+    <section class="iot-section" id="hardware">
+      <div class="iot-section-heading"><span>03 / BUILD NOTES</span><h2>Hardware &amp; setup</h2></div>
+      <div class="iot-table-wrap">
+        <table class="iot-table">
+          <thead><tr><th scope="col">Component</th><th scope="col">Purpose</th></tr></thead>
+          <tbody>
+            <tr><td>ESP32 development board</td><td>IoT controller and local web server</td></tr>
+            <tr><td>LED</td><td>Output device controlled through the webpage</td></tr>
+            <tr><td>Current-limiting resistor</td><td>Limits LED current and protects the circuit</td></tr>
+            <tr><td>Breadboard &amp; jumper wires</td><td>Prototyping and electrical connections</td></tr>
+            <tr><td>USB cable</td><td>Programming and board power</td></tr>
+            <tr><td>Wi-Fi router or hotspot</td><td>Provides local wireless connectivity</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3 class="iot-subheading">Wiring reference</h3>
+      <p class="iot-copy"><strong>GPIO 2:</strong> LED anode through a resistor<br /><strong>GND:</strong> LED cathode / circuit ground</p>
+      <p class="iot-note">Some ESP32 boards use a different built-in LED pin. Confirm the board's pinout and adjust the sketch before wiring. GPIO HIGH turns the LED on; GPIO LOW turns it off. A resistor is required with an external LED.</p>
+    </section>
+
+    <section class="iot-section" id="implementation">
+      <div class="iot-section-heading"><span>04 / FIRMWARE</span><h2>Implementation</h2></div>
+      <p class="iot-intro">Set Wi-Fi credentials, initialize GPIO, start the server, and handle each request. Replace the placeholders locally before uploading; never publish real credentials.</p>
+      <p class="iot-code-label">ESP32_Web_Server.ino</p>
+      <pre class="iot-code"><code>#include &lt;WiFi.h&gt;
+
+const char* ssid = "YOUR_WIFI_NAME";
+const char* password = "YOUR_WIFI_PASSWORD";
+WiFiServer server(80);
+const int ledPin = 2;
+
+void setup() {
+  Serial.begin(115200);
+  pinMode(ledPin, OUTPUT);
+  digitalWrite(ledPin, LOW);
+
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to Wi-Fi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+
+  Serial.println("\\nWi-Fi connected");
+  Serial.print("ESP32 IP Address: ");
+  Serial.println(WiFi.localIP());
+  server.begin();
+}
+
+void loop() {
+  WiFiClient client = server.available();
+  if (!client) return;
+
+  String request = client.readStringUntil('\\r');
+  client.flush();
+
+  if (request.indexOf("GET /LED=ON") &gt;= 0) {
+    digitalWrite(ledPin, HIGH);
+  }
+  if (request.indexOf("GET /LED=OFF") &gt;= 0) {
+    digitalWrite(ledPin, LOW);
+  }
+
+  client.println("HTTP/1.1 200 OK");
+  client.println("Content-Type: text/html");
+  client.println("Connection: close");
+  client.println();
+  client.println("&lt;!DOCTYPE html&gt;&lt;html&gt;&lt;head&gt;");
+  client.println("&lt;meta name='viewport' content='width=device-width, initial-scale=1'&gt;");
+  client.println("&lt;title&gt;ESP32 LED Control&lt;/title&gt;&lt;/head&gt;&lt;body&gt;");
+  client.println("&lt;h1&gt;ESP32 LED Control&lt;/h1&gt;");
+  client.println("&lt;p&gt;&lt;a href='/LED=ON'&gt;&lt;button&gt;LED ON&lt;/button&gt;&lt;/a&gt;&lt;/p&gt;");
+  client.println("&lt;p&gt;&lt;a href='/LED=OFF'&gt;&lt;button&gt;LED OFF&lt;/button&gt;&lt;/a&gt;&lt;/p&gt;");
+  client.println("&lt;/body&gt;&lt;/html&gt;");
+  delay(1);
+  client.stop();
+}</code></pre>
+      <h3 class="iot-subheading">What the key parts do</h3>
+      <ul class="iot-steps">
+        <li><code>WiFi.begin()</code> joins the configured wireless network.</li>
+        <li><code>WiFiServer server(80)</code> listens on the standard HTTP port.</li>
+        <li>The request path selects HIGH or LOW for the LED GPIO.</li>
+        <li>The response returns a small HTML page with ON and OFF links.</li>
+      </ul>
+    </section>
+
+    <section class="iot-section" id="evidence">
+      <div class="iot-section-heading"><span>05 / TASK DEMONSTRATION</span><h2>Assignment video</h2></div>
+      <p class="iot-intro">The demonstration shows the ESP32 joining Wi-Fi, opening the control page, and switching the LED on and off.</p>
+      <div class="iot-media">
+        <figure>
+          <img src="IOT%20IMAGES%20N%20VIDS/ASSIGNMENT%201%20PICS.jpeg" alt="ESP32 Assignment 1 project evidence" loading="lazy" />
+          <figcaption>ESP32 and LED project evidence.</figcaption>
+        </figure>
+        <figure>
+          <video controls preload="metadata" playsinline>
+            <source src="IOT%20IMAGES%20N%20VIDS/ASSIGNMENT%201.mp4" type="video/mp4" />
+            Your browser does not support embedded video. <a href="IOT%20IMAGES%20N%20VIDS/ASSIGNMENT%201.mp4">Open the assignment video</a>.
+          </video>
+          <figcaption>Wi-Fi connection, browser control page, and LED ON/OFF demonstration.</figcaption>
+        </figure>
+      </div>
+      <h3 class="iot-subheading">Recommended implementation evidence</h3>
+      <ul class="iot-steps">
+        <li>ESP32 board and LED wiring</li>
+        <li>Browser page with the ESP32 local IP</li>
+        <li>LED ON and OFF states</li>
+      </ul>
+    </section>
+
+    <section class="iot-section" id="reflection">
+      <div class="iot-section-heading"><span>06 / WHAT I LEARNED</span><h2>Reflection</h2></div>
+      <p class="iot-intro">This task introduced the basic workflow of a web-controlled IoT device. I learned how an ESP32 can join Wi-Fi, serve a page, receive HTTP requests, and change a physical GPIO output. It built practical experience with embedded C++, HTML, HTTP, and local-network communication, forming a base for future sensor, cloud, and dashboard projects.</p>
+      <h3 class="iot-subheading">Debug notes</h3>
+      <ul class="iot-steps">
+        <li>ESP32 could not connect to Wi-Fi</li>
+        <li>Webpage could not be opened</li>
+        <li>LED did not respond</li>
+        <li>IP address changed after reconnecting</li>
+      </ul>
+    </section>
+
+    <nav class="iot-bottom-nav" aria-label="Assignment navigation">
+      <a class="btn btn-outline" href="iot.html">&larr; All IoT assignments</a>
+    </nav>
+  </main>
+
+  <div id="footer-root"></div>
+  <button id="backToTop" class="back-to-top" aria-label="Back to top">&uarr;</button>
+  <script src="js/profile.js"></script>
+  <script src="js/components.js"></script>
+  <script src="js/render-iot.js"></script>
+  <script src="js/script.js"></script>
+</body>
+</html>
